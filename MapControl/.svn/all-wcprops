@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/f1zerster_mgr/!svn/ver/4/MapControl
+END
+MapControl.cs
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/f1zerster_mgr/!svn/ver/14/MapControl/MapControl.cs
+END
+DxDeviceEvents.cs
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/f1zerster_mgr/!svn/ver/4/MapControl/DxDeviceEvents.cs
+END
+DrawParameters.cs
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/f1zerster_mgr/!svn/ver/4/MapControl/DrawParameters.cs
+END
+RetriveDrawParameters.cs
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/f1zerster_mgr/!svn/ver/8/MapControl/RetriveDrawParameters.cs
+END
+MapControl.csproj.user
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/f1zerster_mgr/!svn/ver/14/MapControl/MapControl.csproj.user
+END
+MapControl.csproj
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/f1zerster_mgr/!svn/ver/4/MapControl/MapControl.csproj
+END
+MapControl.resx
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/f1zerster_mgr/!svn/ver/4/MapControl/MapControl.resx
+END

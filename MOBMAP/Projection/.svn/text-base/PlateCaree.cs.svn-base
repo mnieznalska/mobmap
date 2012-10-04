@@ -1,0 +1,107 @@
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Text;
+
+namespace MOBMAP.Projection
+{
+    public class PlateCaree
+    {
+        #region members
+        /*this values help to convert from degrees to radians 
+         * and from radian to degrees
+         */
+        private const double DEGREEStoRADIANS = Math.PI / 180;
+        private const double RADIANStoDEGREES = 180 / Math.PI;
+
+        /* These values represent the equatorial radius of the WGS84 ellipsoid in meters.
+         * resulting in projected coordinates which are also in meters
+         */
+        private const double WGS84SEMIMAJOR = 6378137.0;
+        private const double ONEOVERWGS84SEMIMAJOR = 1.0 / WGS84SEMIMAJOR;
+
+        #endregion
+
+        public PlateCaree()
+        {
+        }
+
+        #region methods
+        
+        // Converts a geographic coordinate into a projected coordinate.
+        public Coordinates.Coordinate geoConvert(Coordinates.Coordinate geoCoordinate)
+        {
+            // create new point
+            Coordinates.Coordinate result = new Coordinates.Coordinate();
+
+            // calc projected X coordinate
+            result.coordinatePoint.X = (float)(geoCoordinate.coordinatePoint.X * DEGREEStoRADIANS * Math.Cos(0) * WGS84SEMIMAJOR);
+
+            // calc projected Y coordinate
+            result.coordinatePoint.Y = (float)(geoCoordinate.coordinatePoint.Y * DEGREEStoRADIANS * WGS84SEMIMAJOR);
+
+            //Z coordinate
+            result.coordinatePoint.Z = geoCoordinate.coordinatePoint.Z;//(float)(geoCoordinate.coordinatePoint.Z * DEGREEStoRADIANS * Math.Cos(0) * WGS84SEMIMAJOR);
+
+            result.fix = geoCoordinate.fix;
+
+            // Return the result
+            return result;
+        }
+
+
+        /// Converts a projected coordinate to a geographic coordinate.
+        public Coordinates.Coordinate projConvert (Coordinates.Coordinate projCoordinate)
+        {
+            // Make a new point to store the result
+            Coordinates.Coordinate result = new Coordinates.Coordinate();
+
+            // Calculate the geographic X coordinate (longitude)
+            result.coordinatePoint.X = (float)(projCoordinate.coordinatePoint.X * ONEOVERWGS84SEMIMAJOR / Math.Cos(0) * RADIANStoDEGREES);
+
+            // Calculate the geographic Y coordinate (latitude)
+            result.coordinatePoint.Y = (float)(projCoordinate.coordinatePoint.Y * ONEOVERWGS84SEMIMAJOR * RADIANStoDEGREES);
+
+            result.coordinatePoint.Z = projCoordinate.coordinatePoint.Z;//(float)(projCoordinate.coordinatePoint.Z * ONEOVERWGS84SEMIMAJOR / Math.Cos(0) * RADIANStoDEGREES);
+
+            result.fix = projCoordinate.fix;
+
+            return result;
+        }
+
+        /// Converts a projected coordinate to a geographic coordinate.
+        public float projConvertX(float projCoordinateX)
+        {
+            // Make a new point to store the result
+            float result;
+
+            // Calculate the geographic X coordinate (longitude)
+            result= (float)(projCoordinateX * ONEOVERWGS84SEMIMAJOR / Math.Cos(0) * RADIANStoDEGREES);
+
+            return result;
+        }
+        /// Converts a projected coordinate to a geographic coordinate.
+        public float projConvertY(float projCoordinateY)
+        {
+            // Make a new point to store the result
+            float result;
+
+            // Calculate the geographic Y coordinate (latitude)
+            result = (float)(projCoordinateY * ONEOVERWGS84SEMIMAJOR * RADIANStoDEGREES);
+
+            return result;
+        }
+        /// Converts a projected coordinate to a geographic coordinate.
+        public float projConvertZ(float projCoordinateZ)
+        {
+            // Make a new point to store the result
+            float result;
+
+            result = (float)(projCoordinateZ * ONEOVERWGS84SEMIMAJOR / Math.Cos(0) * RADIANStoDEGREES);
+
+            return result;
+        }
+        #endregion
+
+    }
+}

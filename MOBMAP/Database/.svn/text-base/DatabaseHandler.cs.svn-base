@@ -1,0 +1,358 @@
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Text;
+using System.IO;
+using System.Data.SQLite;
+using System.Windows.Forms;
+using Microsoft.WindowsMobile.Samples.Location;
+
+namespace MOBMAP.Database
+{
+    class DatabaseHandler:Database.IDatabase
+    {
+        #region members
+        FileInfo dbFileInfo;
+        DirectoryInfo dirInfo;
+      
+        int trackId;
+        SQLiteConnection sqliteConn;
+        SQLiteCommand sqliteCmd;
+        SQLiteDataReader dataReader;
+
+        //list - latitude, longitude, altitude to retrive to draw terrain
+        private List<Coordinates.Coordinate> _dbCoordinatesList;
+        private List<int> _trackIdList;
+        
+        #endregion
+        public List<int> trackIdList
+        {
+            get{ return _trackIdList; }
+            set { _trackIdList = value; }    
+        }
+
+        public List<Coordinates.Coordinate> dbCoordinatesList
+        {
+            get { return _dbCoordinatesList; }
+            set { _dbCoordinatesList = value; }
+        }
+   
+        #region IDatabase members
+        //if database exist call methot to set actual trackID (last trackID indatabase +1) and return true, 
+        //if database doesn't exist set trackID = 0 and return false
+        public bool hasDatabase
+        {
+            get
+            {    
+                try
+                {
+                    dbFileInfo = new FileInfo(Program.dbFullPath);
+
+                    if (!dbFileInfo.Exists)
+                    {
+                        trackId = 0;
+                        return false;
+                    }
+                    else
+                    {
+                        setTrackId();
+                        return true;
+                    }
+                }catch(IOException ioEx)
+                {
+                    MessageBox.Show("ioex dbh"+ ioEx.Message);
+                    return false;
+                }
+                
+            }
+        }
+
+        //if database doesn't exist create empty database and call method
+        //to create empty tables
+        public void initDatabase()
+        {         
+                try
+                {
+                    dirInfo = new DirectoryInfo(Program.dbPath);
+                    dbFileInfo = new FileInfo(Program.dbFullPath);
+
+                    //check if exist database directory
+                    if (!dirInfo.Exists)
+                    {//create new if not exist
+                        dirInfo.Create();
+                    }
+                    //chceck if exist required database
+                    if (!dbFileInfo.Exists)
+                    {
+                        //if not exist create empty database file
+                        SQLiteConnection.CreateFile(Program.dbFullPath);
+                        //and init tables
+                        initTables();
+                    }
+                    /*else
+                    {//if database exist check all required table
+                        checkTables();
+                    }
+                    */
+                }
+                catch (SQLiteException sqliteEx)
+                {
+                    MessageBox.Show("dbcre" + sqliteEx.Message);
+                    
+                }
+
+        }
+        // get last index if trackID from database and set new one (trackID+1)
+        public void setTrackId()
+        {
+            StringBuilder query;
+            int lastTrackId = 0;
+            string result = null;
+            try
+            {
+                query = new StringBuilder();
+                query.Append("select max(trackId) from gpsdata;");
+
+                createSqliteConn();
+
+                result = executeQuery(query, true);
+              
+                if (result != "")
+                    lastTrackId = Int32.Parse(result);
+                else
+                    lastTrackId = -1;
+
+                closeSqliteConn();
+
+            }
+            catch (SQLiteException sqliteEx)
+            {
+               MessageBox.Show("m1"+sqliteEx.Message);
+            }
+
+            trackId = lastTrackId + 1;
+        }
+        //remove track from database
+        public void removeTrack(int trackId)
+        {
+            StringBuilder query;
+
+            try
+            {
+                query = new StringBuilder();
+
+                query.Append("delete FROM gpsData WHERE trackId = " + Int64.Parse(trackId.ToString()) + " ;");
+
+                createSqliteConn();
+
+                executeQuery(query, false);
+
+                closeSqliteConn();
+            }
+            catch (SQLiteException sqliteEx)
+            {
+                MessageBox.Show("mRem" + sqliteEx.Message);
+            }
+        }
+        //read data from database and add to drawParameterList
+        public List<Coordinates.Coordinate> readTrackData(int trackId)
+        {
+            StringBuilder query;
+
+            dbCoordinatesList = new List<Coordinates.Coordinate>();
+
+            try
+            {
+                query = new StringBuilder();
+
+                query.Append("SELECT DISTINCT longitude, latitude, altitude, fix FROM gpsData WHERE trackId = " + Int64.Parse(trackId.ToString()) + " order by ID ASC ;");
+
+                createSqliteConn();
+
+                dataReader = readData(query);
+
+                while(dataReader.Read())
+                {
+                    //MessageBox.Show("" + dataReader.GetString(0).ToString()+ "   "+
+                    //    dataReader.GetString(1).ToString() + "cnt=" + dataReader.GetValue(2));
+                    dbCoordinatesList.Add(new Coordinates.Coordinate(new Geometry.Point( float.Parse(dataReader.GetString(1).ToString()),
+                        float.Parse(dataReader.GetString(0).ToString()),
+                        float.Parse(dataReader.GetValue(2).ToString().Contains(",") ? dataReader.GetValue(2).ToString() : dataReader.GetValue(2).ToString() + ",0")),
+                        true//dataReader.GetInt32(3)
+                        ));//(latitude, longitude, altitude)
+                }
+                
+                closeSqliteConn();
+            }
+            catch (SQLiteException sqliteEx)
+            {
+                MessageBox.Show("m2" + sqliteEx.Message);
+            }
+
+            //IEnumerable<Coordinates.Coordinate> distinctCoord = dbCoordinatesList.Distinct();
+            //dbCoordinatesList = (List<Coordinates.Coordinate>)distinctCoord;
+            return dbCoordinatesList;
+        }
+
+        //read data from database and add to drawParameterList
+        public void readTrackIDs()
+        {
+            StringBuilder query;
+
+            trackIdList = new List<int>();
+
+            try
+            {
+                query = new StringBuilder();
+
+                query.Append("SELECT DISTINCT trackID FROM gpsData;");
+
+                createSqliteConn();
+
+                dataReader = readData(query);
+                
+                while (dataReader.Read())
+                {
+                    trackIdList.Add(int.Parse( dataReader["trackID"].ToString()));
+                }
+
+                closeSqliteConn();
+            }
+            catch (SQLiteException sqlEx)
+            {
+                MessageBox.Show("m3" + sqlEx.Message);
+            }
+
+        }
+
+
+        //add track data to database (to gpsData table) and clear list of position
+        public void addTrackData(GPS.Position <GpsPosition> positionList)
+        {
+            GpsPosition[] positionArray =new GpsPosition[positionList.Count];
+            positionList.CopyTo(positionArray, 0);
+            positionList.Clear();
+            StringBuilder query = new StringBuilder();
+           // drawParametersList = new List<MapControl.DrawParameters>();
+            try
+            {
+                foreach (GpsPosition pos in positionArray)
+                {
+                    query.Append("INSERT INTO gpsData ('trackId', 'longitude', 'latitude', 'altitude', 'fix') VALUES (");
+                    query.Append(trackId + ", '");
+                    query.Append(pos.Longitude + "', '");
+                    query.Append(pos.Latitude + "', '");
+                    query.Append(pos.SeaLevelAltitude + "', '");
+                    /*if (pos.SeaLevelAltitudeValid)
+                        query.Append(3 + "');");
+                    else if (pos.SatelliteCountValid && pos.SatelliteCount == 3)
+                        query.Append(2 + "');");
+                    else
+                        query.Append(0 + "');");
+                    */
+                    query.Append((int)pos.PositionDilutionOfPrecision + "');");
+                   // drawParametersList.Add(new MapControl.DrawParameters(pos.Latitude, pos.Longitude, pos.SeaLevelAltitude));
+                }
+
+                
+                //positionList.Clear();
+                
+                createSqliteConn();
+
+                executeQuery(query, false);
+
+                closeSqliteConn();
+
+            }
+            catch (SQLiteException sqliteEx)
+            {
+                MessageBox.Show("exception "+ sqliteEx.Message);
+            }
+        }
+
+        //return drawParametersList
+       // public List<MAP.DrawData> getDrawParameters()
+       // {
+       //     return drawDataList;
+       // }
+
+        #endregion
+
+
+        #region additional function
+
+        //initialize required table in database
+        private void initTables()
+        {
+            //define query to initialize database
+            StringBuilder query = new StringBuilder();
+
+            query.Append("Create table gpsData( " +
+                    "ID INTEGER PRIMARY KEY autoincrement, " +
+                    "trackID INTEGER, " +
+                    "longitude real, " +
+                    "latitude real, " +
+                    "altitude real, " +
+                    "fix INTEGER );");
+            try
+            {
+                createSqliteConn();
+
+                executeQuery(query,false);
+
+                closeSqliteConn();
+            }
+            catch (SQLiteException sqliteEx)
+            {
+                MessageBox.Show("m2" + sqliteEx.Message);
+            }
+        }
+
+        //create sqlite database connection
+        private void createSqliteConn()
+        {
+            //create connection to database
+            sqliteConn = new SQLiteConnection(String.Format("Data Source={0};New=False;Version=3", Program.dbFullPath));
+            sqliteConn.Open();
+        }
+
+        //close sqlite database connection
+        private void closeSqliteConn()
+        {
+            //create, execute and dispose command
+            sqliteConn.Close();
+            sqliteConn.Dispose();
+        }
+
+        //execute query or scalar command on database
+        private string executeQuery(StringBuilder query, bool executeScalar)
+        {
+            string result=null;
+            //create, execute and dispose command
+            sqliteCmd = sqliteConn.CreateCommand();
+            sqliteCmd.CommandText = query.ToString();
+            if (!executeScalar)
+            {
+                sqliteCmd.ExecuteNonQuery();
+            }
+            else
+            {
+                result = sqliteCmd.ExecuteScalar().ToString();  
+            }
+            sqliteCmd.Dispose();
+            return result;
+        }
+
+        //read data from database
+        private SQLiteDataReader readData(StringBuilder query)
+        {
+            sqliteCmd = sqliteConn.CreateCommand();
+            sqliteCmd.CommandText = query.ToString();
+            return sqliteCmd.ExecuteReader();
+        }
+
+
+        #endregion
+    }
+        
+}

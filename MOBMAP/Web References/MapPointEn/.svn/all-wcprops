@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn
+END
+DataSource.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/DataSource.datasource
+END
+Route.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/Route.datasource
+END
+LatLong.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/LatLong.datasource
+END
+VersionInfo.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/VersionInfo.datasource
+END
+FindResults.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/FindResults.datasource
+END
+mappoint.wsdl
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/mappoint.wsdl
+END
+PixelCoord.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/PixelCoord.datasource
+END
+Location.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/Location.datasource
+END
+Reference.cs
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/Reference.cs
+END
+MapViewRepresentations.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/MapViewRepresentations.datasource
+END
+EntityType.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/EntityType.datasource
+END
+MapImage.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/MapImage.datasource
+END
+Reference.map
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/Reference.map
+END
+LineDriveMapImage.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/LineDriveMapImage.datasource
+END
+CountryRegionInfo.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/CountryRegionInfo.datasource
+END
+Address.datasource
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/f1zerster_mgr/!svn/ver/36/MOBMAP/Web%20References/MapPointEn/Address.datasource
+END

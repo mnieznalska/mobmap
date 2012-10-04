@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/f1zerster_mgr/!svn/ver/19/MOBMAP/Coordinates
+END
+CoordinateListEventListener.cs
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/f1zerster_mgr/!svn/ver/31/MOBMAP/Coordinates/CoordinateListEventListener.cs
+END
+CoordinateSystem.cs
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/f1zerster_mgr/!svn/ver/20/MOBMAP/Coordinates/CoordinateSystem.cs
+END
+CoordinateListEventChanged.cs
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/f1zerster_mgr/!svn/ver/20/MOBMAP/Coordinates/CoordinateListEventChanged.cs
+END
+Coordinate.cs
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/f1zerster_mgr/!svn/ver/20/MOBMAP/Coordinates/Coordinate.cs
+END

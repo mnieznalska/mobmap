@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/f1zerster_mgr/!svn/ver/11/MOBMAP/Triangulation
+END
+DelaunayEventChanged.cs
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/f1zerster_mgr/!svn/ver/20/MOBMAP/Triangulation/DelaunayEventChanged.cs
+END
+Delaunay.cs
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/f1zerster_mgr/!svn/ver/29/MOBMAP/Triangulation/Delaunay.cs
+END
+DelaunayListEventListener.cs
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/f1zerster_mgr/!svn/ver/35/MOBMAP/Triangulation/DelaunayListEventListener.cs
+END

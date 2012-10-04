@@ -1,0 +1,44 @@
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Text;
+
+namespace MOBMAP.Hardware
+{
+    class Hardware
+    {
+        public interface IGps
+        {
+            //jezeli GPS dostepny zwraca true
+            bool hasGPS
+            {
+                get;
+            }
+            IntPtr getGpsHandle();
+
+        }
+
+        static IGps _gpsHandler = null;
+
+        //sprawdza czy istnieje GPSID (istnieje w wersjach 5.0 i nowszych)
+        public static IGps GetGpsHandler()
+        {
+            if (_gpsHandler == null)
+            {
+                if (Environment.OSVersion.Version.Major >= 5)
+                {
+                    //"System Version 5 or later";
+                    _gpsHandler = new PostWm5GpsHandler();
+                }
+                else
+                {
+                    //"System Version before 5";
+                    _gpsHandler = new PreWm5GpsHandler();
+                }
+            }
+
+            return _gpsHandler;
+        }
+       
+    }
+}

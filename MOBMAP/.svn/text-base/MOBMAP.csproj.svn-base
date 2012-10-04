@@ -1,0 +1,179 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{3376B241-A39A-4169-BBEE-D4BC32A9AFC9}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MOBMAP</RootNamespace>
+    <AssemblyName>MOBMAP</AssemblyName>
+    <ProjectTypeGuids>{4D628B5B-2FBC-4AA6-8C16-197242AEB884};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <PlatformFamilyName>PocketPC</PlatformFamilyName>
+    <PlatformID>b2c48bd2-963d-4549-9169-1fa021dce484</PlatformID>
+    <OSVersion>5.2</OSVersion>
+    <DeployDirSuffix>MOBMAP</DeployDirSuffix>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <NativePlatformName>Windows Mobile 6 Professional SDK</NativePlatformName>
+    <FormFactorID>
+    </FormFactorID>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;$(PlatformFamilyName)</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
+    <ErrorReport>prompt</ErrorReport>
+    <FileAlignment>512</FileAlignment>
+    <WarningLevel>4</WarningLevel>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;$(PlatformFamilyName)</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
+    <ErrorReport>prompt</ErrorReport>
+    <FileAlignment>512</FileAlignment>
+    <WarningLevel>4</WarningLevel>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.WindowsMobile.DirectX" />
+    <Reference Include="Microsoft.WindowsMobile.Samples.Location, Version=1.0.3703.20804, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\Microsoft.WindowsMobile.Samples.Location.dll</HintPath>
+    </Reference>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.65.0, Culture=neutral, PublicKeyToken=1fdb50b1b62b4c84, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Coordinates\CoordinateSystem.cs" />
+    <Compile Include="Coordinates\Coordinate.cs" />
+    <Compile Include="Database\Database.cs" />
+    <Compile Include="Database\DatabaseHandler.cs" />
+    <Compile Include="Coordinates\CoordinateListEventChanged.cs" />
+    <Compile Include="Coordinates\CoordinateListEventListener.cs" />
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GPS\GpsConnector.cs" />
+    <Compile Include="GPS\GpsEvents.cs" />
+    <Compile Include="GPS\Position.cs" />
+    <Compile Include="Hardware\Hardware.cs" />
+    <Compile Include="Hardware\PostWm5GpsHandler.cs" />
+    <Compile Include="Hardware\PreWm5GpsHandler.cs" />
+    <Compile Include="MAP3D\Map3dDraw.cs" />
+    <Compile Include="MAP3D\Map3d.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MAP3D\Map3dSimulation.cs" />
+    <Compile Include="MAP3D\Map3dUserControl.cs" />
+    <Compile Include="MAP3D\Map3dView.cs" />
+    <Compile Include="MapGoogle\MapGoogle.cs" />
+    <Compile Include="MapGoogle\MapGoogleMarker.cs" />
+    <Compile Include="MapGoogle\MapGooglePath.cs" />
+    <Compile Include="MapGoogle\MapGooglePoint.cs" />
+    <Compile Include="MapGoogle\MapGoogleProperties.cs" />
+    <Compile Include="MapGoogle\MapGoogleMarkersList.cs" />
+    <Compile Include="MapGoogle\MapGoogleUrlBuilder.cs" />
+    <Compile Include="MapGoogle\MapGoogleViewport.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Projection\PlateCaree.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ButtonImage.resx">
+      <DependentUpon>ButtonImage.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="GPS\SatelliteView.cs" />
+    <Compile Include="Geometry\Circle.cs" />
+    <Compile Include="Triangulation\DelaunayListEventListener.cs" />
+    <Compile Include="Triangulation\DelaunayEventChanged.cs" />
+    <Compile Include="Geometry\Edge.cs" />
+    <Compile Include="Triangulation\Delaunay.cs" />
+    <Compile Include="Geometry\Point.cs" />
+    <Compile Include="Geometry\Triangle.cs" />
+    <Compile Include="UI\ButtonImage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ButtonImage.Designer.cs">
+      <DependentUpon>ButtonImage.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\satelliteSignal\SatelliteSignalVisualization.csproj">
+      <Project>{02DBD049-58B4-4D4A-BB99-582AB2D63865}</Project>
+      <Name>SatelliteSignalVisualization</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Libs\SQLite.Interop.065.DLL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Libs\System.Data.SQLite.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SQLite.Interop.065.DLL">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="System.Data.SQLite.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <WebReferences Include="Web References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Events\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}">
+        <HostingProcess disable="1" />
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

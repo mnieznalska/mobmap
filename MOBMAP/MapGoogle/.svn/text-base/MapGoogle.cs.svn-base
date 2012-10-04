@@ -1,0 +1,85 @@
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Text;
+using System.Drawing;
+
+namespace MOBMAP.MapGoogle
+{
+    public class MapGoogle
+    {
+        private Image _mapImage = null;
+        private MapGoogleProperties _mapProperties;
+        private MapGooglePath _mapPath;
+        private MapGoogleMarkersList _mapMarkersList;
+        private MapGoogleUrlBuilder _urlBuilder;
+
+        public MapGoogle(Image img)
+        {
+            this._mapImage = img;
+            _mapProperties = new MapGoogleProperties(_mapImage);
+            _mapMarkersList = new MapGoogleMarkersList();
+            _mapPath = new MapGooglePath();
+            _urlBuilder = new MapGoogleUrlBuilder(this);
+        }
+
+        #region getters & setters
+        public Image mapImage
+        {
+            get { return _mapImage; }
+        }
+        public MapGoogleProperties mapProperties
+        {
+            get { return _mapProperties; }
+        }
+        public MapGoogleMarkersList mapMarkersList
+        {
+            get { return _mapMarkersList; }
+        }
+        public MapGooglePath mapPath
+        {
+            get { return _mapPath; }
+            set { _mapPath = value; }
+        }
+        public MapGoogleUrlBuilder urlBuilder
+        {
+            get { return _urlBuilder; }
+        }
+        #endregion
+
+        public Bitmap downloadMap(string url)
+        {
+            Bitmap mapBtm = null;
+            try
+            {
+                // Open connection
+                System.Net.HttpWebRequest httpWebRequest = (System.Net.HttpWebRequest)System.Net.HttpWebRequest.Create(url);
+
+                httpWebRequest.AllowWriteStreamBuffering = true;
+
+                // timeout (20 seconds)
+                httpWebRequest.Timeout = 20000;
+
+                // Response:
+                System.Net.WebResponse webResponse = httpWebRequest.GetResponse();
+
+                // Open data stream:
+                System.IO.Stream webStream = webResponse.GetResponseStream();
+
+                // Create new bitmap from stream
+                mapBtm = new Bitmap(webStream);
+
+                // Close
+                webStream.Close();
+                webResponse.Close();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show(ex.Message);
+                return null;
+            }
+
+            return mapBtm;
+        }
+    }
+}

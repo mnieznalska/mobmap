@@ -1,0 +1,47 @@
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Text;
+
+namespace MOBMAP.Triangulation
+{
+    public class DelaunayListEventListener
+    {
+        private Form1 parentForm = null;
+        private DelaunayEventChanged triangulation;
+
+        public DelaunayListEventListener(Form1 parentForm, DelaunayEventChanged triangulation )
+        {
+            this.parentForm = parentForm;
+            this.triangulation = triangulation;
+
+            this.triangulation.Changed += new ChangedEventHandler(TriangulationChanged);
+        }
+
+        // This will be called whenever the list changes.
+        private void TriangulationChanged(object sender, EventArgs args)
+        {
+            onChanged(args);
+        }
+
+        public void Detach()
+        {
+            // Detach the event and delete the list
+            if (this.triangulation != null)
+            {
+                this.triangulation.Changed -= new ChangedEventHandler(TriangulationChanged);
+                this.triangulation = null;
+            }
+        }
+
+        public void onChanged(EventArgs args)
+        {//jesli z triangulacja to tu wywolywac, jesli nie to wywolywac w coordinates ponizsza funkcje. 
+            //przerobic ja zeby przyjmowala tez bez triangulacji tylko wektory do trasy i punktow
+            //przyjzec sie indexLast w coordinates listener
+            //jak nie dodane do triangulacji to nie kasowac punktow lub cos innego zrobic
+           // parentForm.map.mapDraw.trackList = triangulation.pointList;
+            parentForm.map.mapDraw.setTriangulateData(parentForm.delaunayTriangulation);
+            
+        }
+    }
+}

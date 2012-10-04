@@ -1,0 +1,752 @@
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Text;
+using Microsoft.WindowsMobile.DirectX.Direct3D;
+using System.Drawing;
+using System.Threading;
+using System.Windows.Forms;
+using Microsoft.WindowsMobile.DirectX;
+using D3D = Microsoft.WindowsMobile.DirectX.Direct3D;
+
+namespace MOBMAP.MAP
+{
+    public class MapDraw
+    {
+        #region members
+        private Map _map = null;
+
+        private Triangulation.Delaunay _triangulation;
+
+        private VertexBuffer _vertBuffer;
+        
+        private CustomVertex.PositionColored[] _vertices;
+        public List<Geometry.Point> trackList;
+
+        public bool isDbReading = false;
+        public bool isConstView = true;
+        private short[] indicesMesh;
+
+        float sumX = 0.0f;
+        float sumY = 0.0f;
+        float sumZ = 0.0f;
+
+        public float minX = 0;
+        public float minY = 0;
+        public float minZ = 0;
+        public float maxX = 0;
+        public float maxY = 0;
+        public float maxZ = 0;
+        public float dx, dy, dz;
+
+        private int currentPosColor = Color.Black.ToArgb();
+        private int pointsColor = Color.Blue.ToArgb();
+        private int[] colors2D;
+        private float[] zValue;
+
+        public Mesh meshTerrain;
+        public Geometry.Point currentPosition;// = new MOBMAP.Geometry.Point();
+
+
+        public enum DrawFromStatus
+        {
+            DRAW_FROM_DB = 1,
+            DRAW_FROM_GPS = 2,
+            DRAW_SIMULATION = 3,
+            NOT_DRAW_FROM = 4
+        }
+
+        public DrawFromStatus drawFromStatus = DrawFromStatus.NOT_DRAW_FROM;
+        #endregion
+
+        public MapDraw(Map map)
+        {
+            this.map = map;
+            this.triangulation = map.parentForm.delaunayTriangulation;
+
+        }
+
+        #region getters & setters
+        public Map map
+        {
+            get { return _map; }
+            set { _map = value; }
+        }
+        public Triangulation.Delaunay triangulation
+        {
+            get { return _triangulation; }
+            set { _triangulation = value; }
+        }
+
+        public VertexBuffer vertBuffer
+        {
+            get { return _vertBuffer; }
+            set { _vertBuffer = value; }
+        }
+
+        public CustomVertex.PositionColored[] vertices
+        {
+            get { return _vertices; }
+            set { _vertices = value; }
+        }
+
+        #endregion
+
+        public void setCurrentPos(Coordinates.Coordinate projCoordinate)
+        {
+            currentPosition = projCoordinate.coordinatePoint;
+        }
+        public void setTrackData(List<Coordinates.Coordinate> projCoordinateList)
+        {
+            setVertices(projCoordinateList);
+            setMap();       
+        }
+
+        
+        public void setTriangulateData(Triangulation.Delaunay delaunayTriangulation)
+        {
+            this.triangulation = delaunayTriangulation;
+
+            if (this.triangulation != null && this.triangulation.pointList != null && this.triangulation.triangleList != null
+                && this.triangulation.pointList.Count != 0 && this.triangulation.triangleList.Count != 0)
+            {
+
+                setVertices(triangulation.pointList);
+                setMap();
+                switch(map.parentForm.drawStatus)
+                {
+                    case Form1.DrawStatus.DRAW_TERRAIN_3D:
+                    //case Form1.DrawStatus.DRAW_TERRAIN_3D_TRACK:
+                    case Form1.DrawStatus.DRAW_TERRAIN_3D_POINTS:
+                    //case Form1.DrawStatus.DRAW_ALL_3D:
+                        {   setIndicesMesh();
+                            CreateMesh();
+                        } break;
+                }
+                
+             
+            }
+        }
+
+        private void setVerticesColor(CustomVertex.PositionColored[] vert, int color)
+        {
+            for(int i=0;i< vert.Length;i++)
+            {
+                vert[i].Color = color;
+            }
+        }
+
+        private int calculateVerticesColor(float projZ)
+        {//Projection.PlateCaree pc = new MOBMAP.Projection.PlateCaree();
+
+            float Z = projZ;//pc.projConvertZ(projZ);
+            if (Z < 0.0f)
+            {
+                return Color.FromArgb(0,64,0).ToArgb();
+            }
+            else if (Z >= 0.0f && Z < 500.0f)
+            {
+                return Color.DarkGreen.ToArgb();
+            }
+            else if (Z >= 500.0f && Z < 1000.0f)
+            {
+                return Color.Green.ToArgb();
+            }
+            else if (Z >= 1000.0f && Z < 1500.0f)
+            {
+                return Color.ForestGreen.ToArgb();
+            }
+            else if (Z >= 1500.0f && Z < 2000.0f)
+            {
+                return Color.LimeGreen.ToArgb();
+            }
+            else if (Z >= 2000.0f && Z < 2500.0f)
+            {
+                return Color.Lime.ToArgb();
+            }
+            else if (Z >= 2500.0f && Z < 3000.0f)
+            {
+                return Color.LawnGreen.ToArgb();
+            }
+            else if (Z >= 3000.0f && Z < 3500.0f)
+            {
+                return Color.GreenYellow.ToArgb();
+            }
+            else if (Z >= 3500.0f && Z < 4000.0f)
+            {
+                return Color.Khaki.ToArgb();
+            }
+            else if (Z >= 4000.0f && Z < 4500.0f)
+            {
+                return Color.Yellow.ToArgb();
+            }
+            else if (Z >= 4500.0f && Z < 5000.0f)
+            {
+                return Color.Gold.ToArgb();
+            }
+            else if (Z >= 5000.0f && Z < 6000.0f)
+            {
+                return Color.Goldenrod.ToArgb();
+            }
+            else if (Z >= 6000.0f && Z < 7000.0f)
+            {
+                return Color.Orange.ToArgb();
+            }
+            else if (Z >= 8000.0f && Z < 9000.0f)
+            {
+                return Color.DarkOrange.ToArgb();
+            }
+            else if (Z >= 9000.0f && Z < 10000.0f)
+            {
+                return Color.OrangeRed.ToArgb();
+            }
+            else if (Z >= 10000.0f && Z < 12000.0f)
+            {
+                return Color.Red.ToArgb();
+            }
+            else if (Z >= 12000.0f && Z < 14000.0f)
+            {
+                return Color.Tomato.ToArgb();
+            }
+            else if (Z >= 14000.0f && Z < 16000.0f)
+            {
+                return Color.Coral.ToArgb();
+            }
+            else if (Z >= 16000.0f && Z < 18000.0f)
+            {
+                return Color.SandyBrown.ToArgb();
+            }
+            else if (Z >= 18000.0f && Z < 20000.0f)
+            {
+                return Color.Peru.ToArgb();
+            }
+            else if (Z >= 20000.0f && Z < 23000.0f)
+            {
+                return Color.Chocolate.ToArgb();
+            }
+            else if (Z >= 23000.0f && Z < 26000.0f)
+            {
+                return Color.IndianRed.ToArgb();
+            }
+            else if (Z >= 26000.0f && Z < 29000.0f)
+            {
+                return Color.FromArgb(192,0,0).ToArgb();
+            }
+            else if (Z >= 29000.0f && Z < 34000.0f)
+            {
+                return Color.Firebrick.ToArgb();
+            }
+            else if (Z >= 34000.0f && Z < 38000.0f)
+            {
+                return Color.Brown.ToArgb();
+            }
+            else// if (Z >= 38000)
+            {
+                return Color.FromArgb(64,0,0).ToArgb();
+            }
+        }
+
+        public void setVertices(List<Coordinates.Coordinate> projCoordinateList)
+        {
+            this.vertices = new CustomVertex.PositionColored[projCoordinateList.Count];
+            this.colors2D = new int[projCoordinateList.Count];
+            zValue = new float[projCoordinateList.Count];
+            int indexOfPoint = 0;
+            foreach (Coordinates.Coordinate c in projCoordinateList)
+            {
+                indexOfPoint = projCoordinateList.IndexOf(c);
+
+                this.vertices[indexOfPoint].X = (float)c.coordinatePoint.X;
+                this.vertices[indexOfPoint].Y = (float)c.coordinatePoint.Y;
+                if (//map.parentForm.drawStatus == Form1.DrawStatus.DRAW_ALL_2D
+                    map.parentForm.drawStatus == Form1.DrawStatus.DRAW_TERRAIN_2D
+                    || map.parentForm.drawStatus == Form1.DrawStatus.DRAW_TERRAIN_2D_POINTS
+                    //|| map.parentForm.drawStatus == Form1.DrawStatus.DRAW_TERRAIN_2D_TRACK
+                    )
+                {
+                    this.vertices[indexOfPoint].Z = 0.0f;// +0.1f;
+                    zValue[indexOfPoint] = -(float)c.coordinatePoint.Z;// *10; tu
+                }
+                else
+                {
+                    this.vertices[indexOfPoint].Z = -(float)c.coordinatePoint.Z; //* 10; // +0.1f; tu
+                }
+                //set color of vertices
+                colors2D[indexOfPoint] = calculateVerticesColor((float)(c.coordinatePoint.Z * 10));
+              
+            }
+            // Create a vertex buffer to hold vertices
+            this.vertBuffer = new VertexBuffer(
+                typeof(CustomVertex.PositionColored),   // type of the buffer
+                this.vertices.Length * CustomVertex.PositionColored.StrideSize,//size                                      // holding 3 vertices
+                map.device,                                 //device
+                Usage.WriteOnly,                        // write only
+                CustomVertex.PositionColored.Format,    // format required
+                Pool.SystemMemory);                     
+            
+            this.vertBuffer.SetData(this.vertices, 0, LockFlags.None);
+        
+        }
+        public void setVertices(List<Geometry.Point> pointList)
+        {
+            this.vertices = new CustomVertex.PositionColored[pointList.Count];
+            this.colors2D = new int[pointList.Count];
+            zValue = new float[pointList.Count];
+            int indexOfPoint = 0;
+            foreach (Geometry.Point p in pointList)
+            {
+                indexOfPoint = pointList.IndexOf(p);
+                
+                this.vertices[indexOfPoint].X = (float)p.X;
+                this.vertices[indexOfPoint].Y = (float)p.Y;
+                zValue[indexOfPoint] = this.vertices[indexOfPoint].Z = -(float)p.Z;// *10.0f; tu
+                //calculate color of vertices
+                this.vertices[indexOfPoint].Color =colors2D[indexOfPoint] = calculateVerticesColor(vertices[indexOfPoint].Z*(-10));//tu
+            }
+
+            // Create a vertex buffer to hold vertices
+            this.vertBuffer = new VertexBuffer(
+                typeof(CustomVertex.PositionColored),   // type of the buffer
+                vertices.Length*CustomVertex.PositionColored.StrideSize, //size
+                map.device,                             // device
+                Usage.WriteOnly,                        // write only
+                CustomVertex.PositionColored.Format,    // format required
+                Pool.SystemMemory);                    
+
+            // Set the data in the vertex buffer to our triangles
+            this.vertBuffer.SetData(this.vertices, 0, LockFlags.None);
+        }
+
+      
+        public void setIndicesMesh()
+        {
+            switch (map.parentForm.drawStatus)
+            {
+                //case Form1.DrawStatus.DRAW_ALL_3D:
+                case Form1.DrawStatus.DRAW_TERRAIN_3D:
+                case Form1.DrawStatus.DRAW_TERRAIN_3D_POINTS:
+                //case Form1.DrawStatus.DRAW_TERRAIN_3D_TRACK:
+                    {
+                        this.indicesMesh = new short[3 * triangulation.triangleList.Count];//mesh
+                        int indx = 0;
+
+                        foreach (Geometry.Triangle tr in triangulation.triangleList)
+                        {
+                            this.indicesMesh[indx] = (short)tr.indexP1;
+                            this.indicesMesh[indx + 1] = (short)tr.indexP2;
+                            this.indicesMesh[indx + 2] = (short)tr.indexP3;
+                            indx += 3;
+                        }
+                    } break;
+               /* case Form1.DrawStatus.DRAW_ALL_2D:
+                case Form1.DrawStatus.DRAW_TERRAIN_2D:
+                case Form1.DrawStatus.DRAW_TERRAIN_2D_POINTS:
+                case Form1.DrawStatus.DRAW_TERRAIN_2D_TRACK:
+                    {
+                        this.indicesMesh = new short[6 * ((vertices2D.Length/2)-1)];//mesh
+                       // int indx = 0;
+                        int i = 0;
+                        for (int indx = 0; indx < vertices2D.Length; indx+=6)
+                        {
+                            this.indicesMesh[indx] = (short)i; 
+                            this.indicesMesh[indx + 1] = (short)(i + 1);
+                            this.indicesMesh[indx + 2] = (short)(i + 3);
+
+                            this.indicesMesh[indx + 3] = (short)(i+3);
+                            this.indicesMesh[indx + 4] = (short) i;
+                            this.indicesMesh[indx + 5] = (short)(i + 2);
+
+                            i += 2;
+                        } break;
+                    }*/
+            }
+        }
+
+
+
+       
+        private void CreateMesh()
+        {
+            AttributeRange attributeRange = new AttributeRange();
+
+            switch (map.parentForm.drawStatus)
+            {
+                //case Form1.DrawStatus.DRAW_ALL_3D:
+                case Form1.DrawStatus.DRAW_TERRAIN_3D:
+                case Form1.DrawStatus.DRAW_TERRAIN_3D_POINTS:
+                //case Form1.DrawStatus.DRAW_TERRAIN_3D_TRACK:
+                    {
+                        meshTerrain = new Mesh(indicesMesh.Length / 3, vertices.Length, MeshFlags.SystemMemory, CustomVertex.PositionColored.Format, map.device);
+                        attributeRange.AttributeId = 0;
+                        attributeRange.FaceStart = 0;
+                        attributeRange.FaceCount = indicesMesh.Length / 3;
+                        attributeRange.VertexStart = 0;
+                        attributeRange.VertexCount = vertices.Length;
+
+                        meshTerrain.VertexBuffer.SetData(vertices, 0, LockFlags.None);
+                        meshTerrain.IndexBuffer.SetData(indicesMesh, 0, LockFlags.None);
+                        meshTerrain.SetAttributeTable(new AttributeRange[] { attributeRange });
+
+                    } break;
+                /*    case Form1.DrawStatus.DRAW_ALL_2D:
+                    case Form1.DrawStatus.DRAW_TERRAIN_2D:
+                    case Form1.DrawStatus.DRAW_TERRAIN_2D_POINTS:
+                    case Form1.DrawStatus.DRAW_TERRAIN_2D_TRACK:
+                        {
+                            meshTerrain = new Mesh(indicesMesh.Length / 3, vertices2D.Length, MeshFlags.SystemMemory, CustomVertex.PositionColored.Format, map.device);
+                            attributeRange.AttributeId = 0;
+                            attributeRange.FaceStart = 0;
+                            attributeRange.FaceCount = indicesMesh.Length / 3;
+                            attributeRange.VertexStart = 0;
+                            attributeRange.VertexCount = vertices2D.Length;
+
+                            meshTerrain.VertexBuffer.SetData(vertices2D, 0, LockFlags.None);
+                            meshTerrain.IndexBuffer.SetData(indicesMesh, 0, LockFlags.None);
+                            meshTerrain.SetAttributeTable(new AttributeRange[] { attributeRange });
+
+                        } break;*/
+            }
+            //meshTerrain = meshTerrain.Clone(meshTerrain.Options.Value, CustomVertex.PositionNormalColored.Format, map.device);
+            //meshTerrain.ComputeNormals();
+            
+            //int[] adjac = new int[meshTerrain.NumberFaces * 3];
+            //meshTerrain.GenerateAdjacency(0.5f, adjac);
+            //meshTerrain.OptimizeInPlace(MeshFlags.OptimizeVertexCache, adjac);
+        }
+
+        public void setCurrentPosition(CustomVertex.PositionColored[] vert)
+        {
+            if (vert != null)
+            {
+                int vertCount = vert.Length;
+                sumX = 0.0f;
+                sumY = 0.0f;
+                sumZ = 0.0f;
+
+                foreach (CustomVertex.PositionColored v in vert)
+                {
+                    sumX += v.X;
+                    sumY += v.Y;
+                    sumZ += v.Z;
+                }
+
+                if (isDbReading)
+                {
+                    map.mapView.xPos = -sumX / vertCount;
+                    map.mapView.yPos = -sumY / vertCount;
+                    map.mapView.zPos = -sumZ / vertCount;
+                }
+                else if (isConstView)//view after reading map without translation
+                {
+                    map.mapView.xPos = -vert[vertCount - 1].X;
+                    map.mapView.yPos = -vert[vertCount - 1].Y;
+                    map.mapView.zPos = vert[vertCount - 1].Z;
+                }
+            }
+        }
+
+        public void setMapView(CustomVertex.PositionColored[] Vertex)
+        {
+            if (Vertex!=null && Vertex.Length>0)
+            {
+                float xmin = Vertex[0].X;
+                float ymin = Vertex[0].Y;
+                float zmin = Vertex[0].Z;
+                float xmax = xmin;
+                float ymax = ymin;
+                float zmax = zmin;
+                for (int i = 1; i < Vertex.Length; i++)
+                {
+                    if (Vertex[i].X < xmin) xmin = Vertex[i].X;
+                    if (Vertex[i].X > xmax) xmax = Vertex[i].X;
+                    if (Vertex[i].Y < ymin) ymin = Vertex[i].Y;
+                    if (Vertex[i].Y > ymax) ymax = Vertex[i].Y;
+                    if (Vertex[i].Z < zmin) zmin = Vertex[i].Z;
+                    if (Vertex[i].Z > zmax) zmax = Vertex[i].Z;
+                }
+
+                minX = xmin;
+                minY = ymin;
+                minZ = zmin;
+                maxX = xmax;
+                maxY = ymax;
+                maxZ = zmax;
+
+                dx = xmax - xmin;
+                dy = ymax - ymin;
+                dz = zmax - zmin;
+                float dmax = (dx > dy) ? dx : dy;
+
+                float xmid = (float)((xmax + xmin) * 0.5);
+                float ymid = (float)((ymax + ymin) * 0.5);
+
+                map.mapView.deltaX = (float)(xmax - (dx * 0.5));
+                map.mapView.deltaY = (float)(ymax - (dy * 0.5));
+                map.mapView.deltaZ = dx * 5.0f;
+
+                map.mapView.cameraPosition = new Vector3(0, 0, map.mapView.deltaZ);
+                map.mapView.cameraTarget = new Vector3(0, 0, 0);
+
+                map.mapView.zNear = 0;
+                map.mapView.zFar = 14000000;//triangulation.maxZ+300;
+
+                map.mapView.setCamera();
+                map.mapView.setProjection();
+
+                map.mapUserControl.setStepZ(map.mapView.deltaZ);
+            }
+        }
+
+        public void draw()
+        {
+            switch (map.parentForm.drawStatus)
+            {
+                case Form1.DrawStatus.DRAW_POINTS:
+                    {
+                        //draw frame
+                        drawFrame();
+                        //draw point
+                        drawTrackPoint();
+                    } break;
+                case Form1.DrawStatus.DRAW_TERRAIN_3D:
+                    {
+                        if (meshTerrain != null && meshTerrain.VertexBuffer != null 
+                            && meshTerrain.IndexBuffer != null)
+                        {
+                            //draw frame
+                            drawFrame();
+                            //draw terrain
+                            drawTerrain3D();
+                        
+                        }
+                    } break;
+                //case Form1.DrawStatus.DRAW_TERRAIN_3D_TRACK:
+                //    {
+                //        if (meshTerrain != null && meshTerrain.VertexBuffer != null 
+                //            && meshTerrain.IndexBuffer != null)
+                //        {
+                            //draw frame
+                //            drawFrame();
+                            //draw terrain 3D
+                //            drawTerrain3D();
+                            //draw track
+                 //           drawTrack();
+                 //       }
+               //     } break;
+                case Form1.DrawStatus.DRAW_TERRAIN_3D_POINTS:
+                    {
+                        if (meshTerrain != null && meshTerrain.VertexBuffer != null
+                            && meshTerrain.IndexBuffer != null)
+                        {
+                            //draw frame
+                            drawFrame();
+                            //draw terrain 3D
+                            drawTerrain3D();
+                            //draw points
+                            drawTrackPoint();
+                        }
+                    } break;
+                
+                case Form1.DrawStatus.DRAW_TERRAIN_2D:
+                    {
+                        //draw frame
+                        drawFrame();
+                        //draw terrain 2D
+                         drawTerrain2D();
+                    } break;
+                case Form1.DrawStatus.DRAW_TERRAIN_2D_POINTS:
+                    {
+                        //draw frame
+                        drawFrame();
+                        //draw terrain 2D
+                        drawTerrain2D();
+                        //draw points
+                        drawTrackPoint();
+                    } break;
+                case Form1.DrawStatus.NOT_DRAW:
+                    break;
+                }
+            if(currentPosition!=null)
+            {
+                    //p = new MOBMAP.Geometry.Point(vertices[0].X, vertices[0].Y, vertices[0].Z);
+           
+                drawCurrentPos(currentPosition);
+            }
+           // drawTriangle(0.0f,0.0f ,10.0f);
+          //  drawCurrentPos(p);
+            }
+
+        private void drawTerrain3D()
+        {
+            int numSubSets = meshTerrain.GetAttributeTable().Length;
+            for (int i = 0; i < numSubSets; ++i)
+            {
+                meshTerrain.DrawSubset(i);
+            }
+        }
+
+        private void drawTerrain2D()
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i].Color = colors2D[i];
+            }
+
+            this.vertBuffer.SetData(this.vertices, 0, LockFlags.None);
+            map.device.SetStreamSource(0, this.vertBuffer, 0);
+
+            map.mapView.yPos += 10.0f;
+            map.device.Transform.World = Matrix.Translation(map.mapView.xPos, map.mapView.yPos, map.mapView.zPos) * Matrix.RotationX(map.mapUserControl.angleX) * Matrix.RotationY(map.mapUserControl.angleY) * Matrix.RotationZ(map.mapUserControl.angleZ);
+
+            for (int i = 0; i < 40; i++)
+            {
+                map.mapView.yPos -= 0.5f;
+                map.device.Transform.World = Matrix.Translation(map.mapView.xPos, map.mapView.yPos, map.mapView.zPos) * Matrix.RotationX(map.mapUserControl.angleX) * Matrix.RotationY(map.mapUserControl.angleY) * Matrix.RotationZ(map.mapUserControl.angleZ);
+
+                map.device.DrawPrimitives(PrimitiveType.LineStrip, 0, vertices.Length - 1);
+            }
+            map.mapView.yPos += 10.0f;
+            map.mapView.xPos -= 10.0f;
+            map.device.Transform.World = Matrix.Translation(map.mapView.xPos, map.mapView.yPos, map.mapView.zPos) * Matrix.RotationX(map.mapUserControl.angleX) * Matrix.RotationY(map.mapUserControl.angleY) * Matrix.RotationZ(map.mapUserControl.angleZ);
+
+            for (int i = 0; i < 40; i++)
+            {
+                map.mapView.xPos += 0.5f;
+                map.device.Transform.World = Matrix.Translation(map.mapView.xPos, map.mapView.yPos, map.mapView.zPos) * Matrix.RotationX(map.mapUserControl.angleX) * Matrix.RotationY(map.mapUserControl.angleY) * Matrix.RotationZ(map.mapUserControl.angleZ);
+
+                map.device.DrawPrimitives(PrimitiveType.LineStrip, 0, vertices.Length - 1);
+            }
+            map.mapView.xPos -= 10.0f;
+            map.device.Transform.World = Matrix.Translation(map.mapView.xPos, map.mapView.yPos, map.mapView.zPos) * Matrix.RotationX(map.mapUserControl.angleX) * Matrix.RotationY(map.mapUserControl.angleY) * Matrix.RotationZ(map.mapUserControl.angleZ);
+        }
+
+
+        private void drawFrame()
+        {
+        
+            CustomVertex.PositionColored[] frameVertices = new CustomVertex.PositionColored[8];
+
+            frameVertices[0].X = minX - (dx * 0.5f);
+            frameVertices[0].Y = minY - (dy * 0.5f);
+            frameVertices[0].Z = maxZ;
+            frameVertices[0].Color = Color.Black.ToArgb();
+
+            frameVertices[1].X = minX - (dx * 0.5f);
+            frameVertices[1].Y = maxY + (dy * 0.5f);
+            frameVertices[1].Z = maxZ;
+            frameVertices[1].Color = Color.Black.ToArgb();
+
+            frameVertices[2].X = minX - (dx * 0.5f);
+            frameVertices[2].Y = maxY + (dy * 0.5f);
+            frameVertices[2].Z = maxZ;
+            frameVertices[2].Color = Color.Navy.ToArgb();
+
+            frameVertices[3].X = maxX + (dx * 0.5f);
+            frameVertices[3].Y = maxY + (dy * 0.5f);
+            frameVertices[3].Z = maxZ;
+            frameVertices[3].Color = Color.Navy.ToArgb();
+
+            frameVertices[4].X = maxX + (dx * 0.5f);
+            frameVertices[4].Y = maxY + (dy * 0.5f);
+            frameVertices[4].Z = maxZ;
+            frameVertices[4].Color = Color.Black.ToArgb();
+
+            frameVertices[5].X = maxX + (dx * 0.5f);
+            frameVertices[5].Y = minY - (dy * 0.5f);
+            frameVertices[5].Z = maxZ;
+            frameVertices[5].Color = Color.Black.ToArgb();
+
+            frameVertices[6].X = maxX + (dx * 0.5f);
+            frameVertices[6].Y = minY - (dy * 0.5f);
+            frameVertices[6].Z = maxZ;
+            frameVertices[6].Color = Color.Red.ToArgb();
+
+            frameVertices[7].X = minX - (dx * 0.5f);
+            frameVertices[7].Y = minY - (dy * 0.5f);
+            frameVertices[7].Z = maxZ;
+            frameVertices[7].Color = Color.Red.ToArgb();
+
+
+            // Create a vertex buffer to hold vertices
+            VertexBuffer frameVertBuffer = new VertexBuffer(
+                typeof(CustomVertex.PositionColored),   // type of the buffer
+                frameVertices.Length * CustomVertex.PositionColored.StrideSize, //size
+                map.device,                             // device
+                Usage.WriteOnly,                        // write only
+                CustomVertex.PositionColored.Format,    // format required
+                Pool.SystemMemory);
+
+            // Set the data in the vertex buffer to our triangles
+            frameVertBuffer.SetData(frameVertices, 0, LockFlags.None);
+
+            map.device.SetStreamSource(0, frameVertBuffer, 0);
+            map.device.DrawPrimitives(PrimitiveType.LineList, 0, 4);            
+
+        }
+        
+
+        private void drawTrack()
+        {
+            //draw track
+          //  setVerticesColor(vertices, trackColor);
+
+            this.vertBuffer.SetData(this.vertices, 0, LockFlags.None);
+            map.device.SetStreamSource(0, this.vertBuffer, 0);
+            
+            short[] trackIndices = new short[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                trackIndices[i] = (short)i;
+            }
+
+            IndexBuffer trackIndexBuffer = new IndexBuffer(map.device, trackIndices.Length * CustomVertex.PositionColored.StrideSize, Usage.WriteOnly, Pool.SystemMemory, true);
+            trackIndexBuffer.SetData(trackIndices, 0, LockFlags.None);
+
+            map.device.Indices = trackIndexBuffer;
+
+            map.device.DrawIndexedPrimitives(PrimitiveType.LineStrip, 0, 0, vertices.Length, 0, vertices.Length - 1);
+        }
+
+        private void drawTrackPoint()
+        {
+            setVerticesColor(vertices, pointsColor);
+            this.vertBuffer.SetData(this.vertices, 0, LockFlags.None);
+
+            map.device.SetStreamSource(0, this.vertBuffer, 0);
+            map.device.DrawPrimitives(PrimitiveType.PointList, 0, vertices.Length); 
+        }
+
+        public void setMap()
+        {
+            map.mapUserControl.resetMap();
+            setMapView(vertices);
+            setCurrentPosition(vertices);
+        }
+
+        private void drawCurrentPos(Geometry.Point p)
+        {
+            CustomVertex.PositionColored[] currentPosVertices = new CustomVertex.PositionColored[1];
+
+            currentPosVertices[0].X = p.X;
+            currentPosVertices[0].Y = p.Y;
+            currentPosVertices[0].Z = p.Z;
+            currentPosVertices[0].Color = currentPosColor;
+
+            // Create a vertex buffer to hold vertices
+            VertexBuffer currentPosVertBuffer = new VertexBuffer(
+                typeof(CustomVertex.PositionColored),   // type of the buffer
+                currentPosVertices.Length * CustomVertex.PositionColored.StrideSize, //size
+                map.device,                             // device
+                Usage.WriteOnly,                        // write only
+                CustomVertex.PositionColored.Format,    // format required
+                Pool.SystemMemory);
+
+            // Set the data in the vertex buffer to our triangles
+            currentPosVertBuffer.SetData(currentPosVertices, 0, LockFlags.None);
+
+            map.device.SetStreamSource(0, currentPosVertBuffer, 0);
+            map.device.DrawPrimitives(PrimitiveType.PointList, 0, 1);            
+
+        }
+    }
+}

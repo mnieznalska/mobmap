@@ -1,0 +1,222 @@
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Text;
+using System.Windows.Forms;
+using System.Threading;
+using Microsoft.WindowsMobile.DirectX;
+using Microsoft.WindowsMobile.DirectX.Direct3D;
+
+
+namespace MOBMAP.MAP
+{
+    public partial class Map : UserControl
+    {
+
+        #region members
+        private MapDraw _mapDraw = null;
+        private MapView _mapView = null;
+        private MapUserControl _mapUserControl = null;
+        private Device _device;
+         
+        
+        private Form1 _parentForm = null;
+        private bool isCreated = false;
+
+     
+
+        #endregion
+
+        public Map()
+        {
+            InitializeComponent();
+            
+        }
+
+        #region getters & setters
+        public MapDraw mapDraw
+        {
+            get { return _mapDraw; }
+            set { _mapDraw = value; }
+        }
+
+        public MapView mapView
+        {
+            get { return _mapView; }
+            set { _mapView = value; }
+        }
+
+        public MapUserControl mapUserControl
+        {
+            get { return _mapUserControl; }
+            set { _mapUserControl = value; }
+        }
+
+        public Device device
+        {
+            get { return _device; }
+            set { _device = value; }
+        }
+
+        
+        public Form1 parentForm
+        {
+            get { return _parentForm; }
+            set { _parentForm = value; }
+        }
+        #endregion
+
+
+        public void dxInit(Form1 form)
+        {
+            try
+            {
+                this.parentForm = form;
+                mapDraw = new MapDraw(this);
+                mapView = new MapView(this);
+                mapUserControl = new MapUserControl(this);
+
+                InitializeGraphics();
+
+                this.parentForm.Show();
+                this.parentForm.Focus();
+
+                while (isCreated)
+                {
+                    if(parentForm.d3dRenderStatus==Form1.D3dRenderStatus.D3D_RENDER)
+                        Render();
+                    
+                    Application.DoEvents();
+
+                }
+
+            }
+            catch (DirectXException ex)
+            {
+                throw new ArgumentException("Error: Couldn't initialize 3d graphics", ex);
+            }
+        }
+
+
+        public void dxClose()
+        {
+            this.isCreated = false;
+        }
+
+        public void InitializeGraphics()
+        {
+            PresentParameters presentParams = new PresentParameters();
+            presentParams.Windowed = true;
+            presentParams.SwapEffect = SwapEffect.Discard;
+            //presentParams.AutoDepthStencilFormat = DepthFormat.D16;
+            //presentParams.EnableAutoDepthStencil = true;
+            
+            
+
+            device = new Device(0, DeviceType.Default, this.parentForm, CreateFlags.None | CreateFlags.MultiThreaded, presentParams);
+
+            device.RenderState.FillMode = FillMode.Solid;
+            this.setLighting();
+            mapView.setCamera(/*new Vector3(0,0,0),(float)Math.PI/4, (float)Math.PI / 4*/);
+            mapView.setProjection();
+            mapView.viewport = device.Viewport;
+         //   mapView.setWorld();
+          //  mapDraw.setDrawData();
+            //mapDraw.setTriangulateData();
+            this.isCreated = true;
+        }
+
+
+        public void Render()
+        {
+            try
+            {
+                // Make the screen white to start with
+                device.Clear(ClearFlags.Target, mapView.deviceColor, 1.0f, 0);
+
+                // Beginning of the draw process
+                device.BeginScene();
+       
+                // Create a translation matrix to move our triangle
+                device.Transform.World = Matrix.Translation(mapView.xPos, mapView.yPos, mapView.zPos) *Matrix.RotationX(mapUserControl.angleX) * Matrix.RotationY(mapUserControl.angleY) * Matrix.RotationZ(mapUserControl.angleZ);
+       
+                //Matrix.RotationYawPitchRoll(mapUserControl.angleY, mapUserControl.angleX, mapUserControl.angleZ);
+               // mapView.setCamera();
+               // mapView.setProjection();
+               // mapView.setWorld();
+               // mapDraw.v.Unproject(device.Viewport,device.Transform.Projection,device.Transform.View, device.Transform.World);
+                mapDraw.draw();
+                // End of the draw process
+                device.EndScene();
+        //        Thread.Sleep(10);
+                // Now present the image on the screen
+                device.Present();
+            }catch (Exception ex)
+            {
+                //MessageBox.Show("pres err"+ex.Message);
+            }
+        }
+     
+
+
+        private void setLighting()
+        {
+            device.RenderState.CullMode = Cull.None;//.Clockwise;// CounterClockwise;
+            device.RenderState.Lighting = false;
+
+           /* device.RenderState.Ambient = Color.White;
+
+            // Provides main directional lighting.
+            device.Lights[0].Type = LightType.Directional;
+            device.Lights[0].Direction = new Vector3(0.0f, 0.0f, 2000.2f);
+            device.Lights[0].Diffuse = Color.LightBlue;
+            device.Lights[0].Update();
+
+            // Provides frontal lighting.
+            device.Lights[1].Type = LightType.Directional;
+            device.Lights[1].Direction = new Vector3(0.0f, 0.0f, 2400.0f);
+            device.Lights[1].Diffuse = Color.DarkSlateGray;
+            device.Lights[1].Update();
+
+            // Turn on the lights.
+            device.Lights[0].Enabled = true;
+            device.Lights[1].Enabled = true;
+            // Turn off the light representing the engine.
+            device.Lights[2].Enabled = false;
+            */
+
+          //  device.Lights[0].Type = LightType.Directional;
+          //  device.Lights[0].Diffuse = Color.Red;
+          //  device.Lights[0].Direction = new Vector3(100.5f, 100.0f, 2020.0f);
+          //  device.Lights[0].Enabled = true;
+        }
+
+
+        
+
+        
+
+        public void exitProgram()
+        {
+            Application.Exit();
+        }
+
+
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+
+            // this.components = new System.ComponentModel.Container();
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
+            this.BackColor = System.Drawing.SystemColors.ActiveBorder;
+            this.Name = "MapControl";
+            this.Size = new System.Drawing.Size(26, 26);
+            this.ResumeLayout(false);
+
+        }
+
+    }
+}
